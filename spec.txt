@@ -1,0 +1,91 @@
+8-bit CPU emulator  
+
+Registers 
+
+R0-R3: 4 general-purpose 8-bit registers 
+
+PC: 16-bit program counter 
+
+IR: 8-bit instruction register 
+
+MAR: 16-bit address register 
+Z flag: zero 
+C flag: carry 
+HALT state 
+  
+
+Flags 
+
+The flags are updated after the destination register is written. 
+The Z flag is set to 1 if the result of the last operation was 0 else Z = 0. 
+C flag: 
+    ADD: C = 1 if carry out (sum >= 256), else 0. 
+    SUB: C = 1 if no borrow (result >= 0), else 0. 
+LDI/LD: set Z, leave C 
+ADD: set Z and C 
+SUB: set Z and C (C = 1 means no borrow) 
+AND/OR/XOR: set Z, leave C 
+ST/JMP/JZ/JNZ/NOP/HLT: change no flags 
+  
+
+Memory 
+
+65536 bytes RAM 
+Program is loaded into same memory 
+
+Memory addresses are saved as low endian e.g. [opcode][low byte][high byte] 
+  
+
+Instruction set 
+
+NOP - do nothing - 1 byte 
+LDI r,imm - load immediate - 2 bytes [opcode][imm] 
+LD r,addr - load from memory - 3 bytes [opcode][addr] 
+ST r,addr - store to memory - 3 bytes [opcode][addr] 
+ADD r,imm - add immediate to register - 2 bytes [opcode][imm] 
+ADD r,r2 - add register to register - 2 bytes [opcode][register] 
+SUB r,imm - subtract immediate - 2 bytes [opcode][imm] 
+AND r,imm - 2 bytes [opcode][imm] 
+OR r,imm - 2 bytes [opcode][imm] 
+XOR r,imm - 2 bytes [opcode][imm] 
+JMP addr - set PC to a memory address - 3 bytes [opcode][addr] 
+JZ addr - jump if Z = 1 - 3 bytes [opcode][addr] 
+JNZ addr - jump if Z = 0 - 3 bytes [opcode][addr] 
+HLT - halt the program - 1 byte 
+  
+
+Opcode encoding 
+
+For all instructions referencing a register the high nibble is the command the low nibble is the register e.g. 
+LDI r,imm: 
+    0x10 - LDI R0 
+    0x11 - LDI R1 
+    0x12 - LDI R2 
+    0x13 - LDI R3 
+ 
+For ADD r,r2 register r is set as the sum of r and r2. 
+The first register(r) is the low nibble of the first byte. 
+The second register(r2) is the low nibble of the next byte (the high nibble is ignored) 
+e.g. 0x50 0x03 → R0 = R0 + R3 
+ 
+Any opcode not defined, or any register id not in 0-3 → HALT and return error. 
+ 
+0x1_ means 0x10-0x13 only(registers 0-3 are valid) 
+ 
+0x00 - NOP - do nothing 
+0x1_ - LDI r,imm - load immediate 
+0x2_ - LD r,addr - load from memory 
+0x3_ - ST r,addr - store to memory 
+0x4_ - ADD r,imm - add immediate to register 
+0x5_ - ADD r,r2 - add register to register(see above for more details) 
+0x6_ - SUB r,imm - subtract immediate 
+0x7_ - AND r,imm 
+0x8_ - OR r,imm 
+0x9_ - XOR r,imm 
+0xA0 - JMP addr - set PC to a memory address 
+0xA1 - JZ addr - jump if Z = 1 
+0xA2 - JNZ addr - jump if Z = 0 
+0xFF - HLT - halt the program 
+
+ 
+ 
