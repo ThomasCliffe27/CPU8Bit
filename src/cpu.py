@@ -244,7 +244,7 @@ class CPU8Bit:
         self.execute(opcode, operand)
 
         
-    def run(self, max_cycles=10000):
+    def run(self, max_cycles=1000):
         cycles = 0
         while not self.halted and cycles < max_cycles:
             print(f"PC={self.PC:04X} IR={self.IR:02X} R0={self.reg[0]:02X} R1={self.reg[1]:02X} R2={self.reg[2]:02X} R3={self.reg[3]:02X} Z={self.Z} C={self.C}")
@@ -253,10 +253,8 @@ class CPU8Bit:
             
 from assembler import assemble
 
-source_code = open("program.asm").read()
-machine_code = assemble(source_code.splitlines())
+machine_code = assemble("programs/program.asm")
 
 cpu = CPU8Bit()
 cpu.load_program(machine_code)
 cpu.run()
-print(f"{cpu.mem[0x1234]:02X}")
