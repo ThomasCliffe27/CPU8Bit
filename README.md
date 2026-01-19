@@ -66,20 +66,20 @@ Example: address `0x1234` is stored as `34 12`.
 ## Instruction Set
 
 ```text
-NOP         - do nothing                            - 1 byte
-LDI r, imm  - load immediate into register          - 2 bytes  [opcode][imm]
-LD  r, addr - load from memory into register        - 3 bytes  [opcode][addr]
-ST  r, addr - store register into memory            - 3 bytes  [opcode][addr]
-ADD r, imm  - add immediate to register             - 2 bytes  [opcode][imm]
-ADD r, r2   - add register r2 to register r         - 2 bytes  [opcode][register]
-SUB r ,imm  - subtract immediate from register      - 2 bytes  [opcode][imm]
-AND r, imm  - bitwise AND immediate with register   - 2 bytes  [opcode][imm]
-OR  r, imm  - bitwise OR immediate with register    - 2 bytes  [opcode][imm]
-XOR r, imm  - bitwise XOR immediate with register   - 2 bytes  [opcode][imm]
-JMP addr    - jump to address                       - 3 bytes  [opcode][addr]
-JZ  addr    - jump if Z = 1                         - 3 bytes  [opcode][addr]
-JNZ addr    - jump if Z = 0                         - 3 bytes  [opcode][addr]
-HLT         - halt program                          - 1 byte
+NOP           - do nothing                            - 1 byte
+LDI r, imm    - load immediate into register          - 2 bytes  [opcode][imm]
+LD  r, [addr] - load from memory into register        - 3 bytes  [opcode][addr]
+ST  r, [addr] - store register into memory            - 3 bytes  [opcode][addr]
+ADD r, imm    - add immediate to register             - 2 bytes  [opcode][imm]
+ADD r, r2     - add register r2 to register r         - 2 bytes  [opcode][reg]
+SUB r ,imm    - subtract immediate from register      - 2 bytes  [opcode][imm]
+AND r, imm    - bitwise AND immediate with register   - 2 bytes  [opcode][imm]
+OR  r, imm    - bitwise OR immediate with register    - 2 bytes  [opcode][imm]
+XOR r, imm    - bitwise XOR immediate with register   - 2 bytes  [opcode][imm]
+JMP addr      - jump to address                       - 3 bytes  [opcode][addr]
+JZ  addr      - jump if Z = 1                         - 3 bytes  [opcode][addr]
+JNZ addr      - jump if Z = 0                         - 3 bytes  [opcode][addr]
+HLT           - halt program                          - 1 byte
 ```
 
 ---
@@ -121,8 +121,8 @@ Any opcode not defined, or any register id not in `0–3`, will:
 ```text
 0x00 - NOP
 0x1_ - LDI r, imm   (0x10-0x13 only)
-0x2_ - LD  r, addr
-0x3_ - ST  r, addr
+0x2_ - LD  r, [addr]
+0x3_ - ST  r, [addr]
 0x4_ - ADD r, imm
 0x5_ - ADD r, r2
 0x6_ - SUB r, imm
