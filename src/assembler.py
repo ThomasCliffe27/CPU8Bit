@@ -294,7 +294,6 @@ def assemble(file_name: str) -> bytearray:
     return machine_code
 
 if __name__ == "__main__":
-    machine_code = assemble("programs/program.asm")
+    machine_code = assemble("programs/exponent.asm")
     for b in machine_code:
         print(f"0x{b:02X}")
-

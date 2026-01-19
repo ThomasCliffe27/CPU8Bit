@@ -253,7 +253,7 @@ class CPU8Bit:
             
 from assembler import assemble
 
-machine_code = assemble("programs/program.asm")
+machine_code = assemble("programs/exponent.asm")
 
 cpu = CPU8Bit()
 cpu.load_program(machine_code)
