@@ -38,14 +38,14 @@ Flags are updated **after** the destination register is written.
 
 ### Instructions that update flags
 
-- `LDI`, `LD`: set `Z`, leave `C`
+- `LDI`, `LD`, `LDX`, `MOV`: set `Z`, leave `C`
 - `ADD`: set `Z` and `C`
 - `SUB`: set `Z` and `C` (`C = 1` means no borrow)
 - `AND`, `OR`, `XOR`: set `Z`, leave `C`
 
 ### Instructions that do not change flags
 
-- `ST`, `JMP`, `JZ`, `JNZ`, `NOP`, `HLT`
+- `ST`, `STX`, `JMP`, `JZ`, `JNZ`, `NOP`, `HLT`
 
 ---
 
@@ -66,20 +66,23 @@ Example: address `0x1234` is stored as `34 12`.
 ## Instruction Set
 
 ```text
-NOP           - do nothing                            - 1 byte
-LDI r, imm    - load immediate into register          - 2 bytes  [opcode][imm]
-LD  r, [addr] - load from memory into register        - 3 bytes  [opcode][addr]
-ST  r, [addr] - store register into memory            - 3 bytes  [opcode][addr]
-ADD r, imm    - add immediate to register             - 2 bytes  [opcode][imm]
-ADD r, r2     - add register r2 to register r         - 2 bytes  [opcode][reg]
-SUB r ,imm    - subtract immediate from register      - 2 bytes  [opcode][imm]
-AND r, imm    - bitwise AND immediate with register   - 2 bytes  [opcode][imm]
-OR  r, imm    - bitwise OR immediate with register    - 2 bytes  [opcode][imm]
-XOR r, imm    - bitwise XOR immediate with register   - 2 bytes  [opcode][imm]
-JMP addr      - jump to address                       - 3 bytes  [opcode][addr]
-JZ  addr      - jump if Z = 1                         - 3 bytes  [opcode][addr]
-JNZ addr      - jump if Z = 0                         - 3 bytes  [opcode][addr]
-HLT           - halt program                          - 1 byte
+NOP              - do nothing                            - 1 byte
+LDI r, imm       - load immediate into register          - 2 bytes  [opcode][imm]
+LD  r, [addr]    - load from memory into register        - 3 bytes  [opcode][addr]
+ST  r, [addr]    - store register into memory            - 3 bytes  [opcode][addr]
+ADD r, imm       - add immediate to register             - 2 bytes  [opcode][imm]
+ADD r, r2        - add register r2 to register r         - 2 bytes  [opcode][reg]
+SUB r ,imm       - subtract immediate from register      - 2 bytes  [opcode][imm]
+AND r, imm       - bitwise AND immediate with register   - 2 bytes  [opcode][imm]
+OR  r, imm       - bitwise OR immediate with register    - 2 bytes  [opcode][imm]
+XOR r, imm       - bitwise XOR immediate with register   - 2 bytes  [opcode][imm]
+JMP addr         - jump to address                       - 3 bytes  [opcode][addr]
+JZ  addr         - jump if Z = 1                         - 3 bytes  [opcode][addr]
+JNZ addr         - jump if Z = 0                         - 3 bytes  [opcode][addr]
+MOV r, r2        - store value at r2 in r1               - 2 bytes  [opcode][reg]
+LDX r, [R1:R2]   - load from memory into register        - 2 bytes  [opcode][reg,reg]
+STX r, [R1:R2]   - store register into memory            - 2 bytes  [opcode][reg,reg]
+HLT              - halt program                          - 1 byte
 ```
 
 ---
@@ -97,14 +100,24 @@ Example (`LDI r,imm`):
 - `0x12` → `LDI R2`
 - `0x13` → `LDI R3`
 
-### `ADD r,r2` encoding
+### `Opcode r,r2` encoding
 
-For `ADD r,r2`, register `r` is the **low nibble** of the opcode and register `r2` is the **low nibble** of the next byte (high nibble ignored).
+For `opcode r,r2`, register `r` is the **low nibble** of the opcode and register `r2` is the **low nibble** of the next byte (high nibble ignored).
 
 Example:
 
 ```text
 0x50 0x03  ->  R0 = R0 + R3
+```
+
+### `Opcode r, [R1:R2]` encoding
+
+For `opcode r, [R1:R2]`, register `r` is the **low nibble** of the opcode, register `R1` is the **high nibble** of the next byte and register R2 is the **low nibble** of the same byte.
+
+Example:
+
+```text
+0xC0 0x12  ->  R0 = value at memory address stored at (R2 << 8) + R1
 ```
 
 ### Error behaviour
@@ -132,5 +145,8 @@ Any opcode not defined, or any register id not in `0–3`, will:
 0xA0 - JMP addr
 0xA1 - JZ  addr
 0xA2 - JNZ addr
+0xB_ - MOV r, r2
+0xC_ - STX r, [R1:R2]
+0xD_ - LDX r, [R1:R2]
 0xFF - HLT
 ```
