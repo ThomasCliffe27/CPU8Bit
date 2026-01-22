@@ -1,15 +1,13 @@
-.org 0x0000
-JMP start
+; Write 0xAB to address 0x1234 using STX, then load it back with LDX
 
-.org 0x0200
-data:
-.byte 0x11, 0x22, 0x33
-.word data
+LDI R1, #0x12
+LDI R2, #0x34
 
-.org 0x0100
-start:
-LD R0, [data]       ; 0x11
-LD R1, [data+1]     ; 0x22
-LD R2, [data+2]     ; 0x33
-LD R3, [data+4]
+LDI R0, #0xAB
+STX R0, [R1:R2]
+
+LDI R3, #0x00
+LDX R3, [R1:R2]
+
+ST  R3, [0x0100]
 HLT

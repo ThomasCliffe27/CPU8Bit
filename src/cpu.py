@@ -39,6 +39,9 @@ class CPU8Bit:
             0x70: self.handle_and_imm,
             0x80: self.handle_or_imm,
             0x90: self.handle_xor_imm,
+            0xB0: self.handle_mov_reg,
+            0xC0: self.handle_ldx_regs,
+            0xD0: self.handle_stx_regs,
         }
 
 
@@ -155,6 +158,52 @@ class CPU8Bit:
         if not self.Z:
             self.PC = self.MAR
 
+    def handle_mov_reg(self, opcode, operand):
+        r = opcode & 0x0F
+        if r > 3:
+            self.halted = True
+            raise ValueError(f"Invalid register in opcode {opcode:02X}")
+        r1 = operand & 0x0F
+        if r1 > 3:
+            self.halted = True
+            raise ValueError(f"Invalid register in operand {operand:02X}")
+        
+        self.reg[r] = self.reg[r1]
+        self.set_z_flag(self.reg[r])
+
+    def handle_ldx_regs(self, opcode, operand):
+        r = opcode & 0x0F
+        if r > 3:
+            self.halted = True
+            raise ValueError(f"Invalid register in opcode {opcode:02X}")
+        r1 = (operand >> 4) & 0x0F
+        if r1 > 3:
+            self.halted = True
+            raise ValueError(f"Invalid register in operand {operand:02X}")
+        r2 = operand & 0x0F
+        if r2 > 3:
+            self.halted = True
+            raise ValueError(f"Invalid register in operand {operand:02X}")
+        addr = (self.reg[r1] << 8) + self.reg[r2]
+        self.reg[r] = self.mem[addr]
+        self.set_z_flag(self.reg[r])
+
+    def handle_stx_regs(self, opcode, operand):
+        r = opcode & 0x0F
+        if r > 3:
+            self.halted = True
+            raise ValueError(f"Invalid register in opcode {opcode:02X}")
+        r1 = (operand >> 4) & 0x0F
+        if r1 > 3:
+            self.halted = True
+            raise ValueError(f"Invalid register in operand {operand:02X}")
+        r2 = operand & 0x0F
+        if r2 > 3:
+            self.halted = True
+            raise ValueError(f"Invalid register in operand {operand:02X}")
+        addr = (self.reg[r1] << 8) + self.reg[r2]
+        self.mem[addr] = self.reg[r]
+
     def handle_hlt(self, opcode, operand):
         self.halted = True
 
@@ -244,12 +293,15 @@ class CPU8Bit:
         self.execute(opcode, operand)
 
         
-    def run(self, max_cycles=1000):
+    def run(self, max_cycles=100000, trace=False):
         cycles = 0
         while not self.halted and cycles < max_cycles:
-            print(f"PC={self.PC:04X} IR={self.IR:02X} R0={self.reg[0]:02X} R1={self.reg[1]:02X} R2={self.reg[2]:02X} R3={self.reg[3]:02X} Z={self.Z} C={self.C}")
+            if trace:
+                print(f"PC={self.PC:04X} IR={self.IR:02X} R0={self.reg[0]:02X} R1={self.reg[1]:02X} R2={self.reg[2]:02X} R3={self.reg[3]:02X} Z={self.Z} C={self.C}")
             self.step()
             cycles += 1
+        if cycles >= max_cycles:
+            raise ValueError("Max cpu cycles exceeded")
             
 from assembler import assemble
 
@@ -257,3 +309,11 @@ machine_code = assemble("programs/program.asm")
 cpu = CPU8Bit()
 cpu.load_program(machine_code)
 cpu.run()
+'''
+output = ""
+for i in range(0x2000, 0x2400):
+    output = output + f"{cpu.mem[i]:02X} "
+    if i % 32 == 31:
+        output = output + "\n"
+print(output)
+'''

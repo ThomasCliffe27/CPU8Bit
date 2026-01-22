@@ -107,6 +107,29 @@ def assemble(file_name: str) -> bytearray:
 
         return lo, hi
 
+    def parse_reg_reg(parts: list[str], idx: int) -> tuple[int, int]:
+        reg_tok = parts[idx].rstrip(",").upper()
+
+        if reg_tok.startswith("[") and reg_tok.endswith("]"):
+            reg_tok = reg_tok[1:-1].strip()
+
+        if ":" not in reg_tok:
+            raise ValueError(f"Expected register pair like [R1:R2], got {parts[idx]} on line {line_number}")
+        
+        reg_tok_hi, reg_tok_lo = reg_tok.split(":", 1)
+        if not reg_tok_hi.startswith("R") or not reg_tok_hi[1:].isdigit():
+            raise ValueError(f"Bad register: {parts[idx]!r} on line {line_number}")
+        if not reg_tok_lo.startswith("R") or not reg_tok_lo[1:].isdigit():
+            raise ValueError(f"Bad register: {parts[idx]!r} on line {line_number}")
+        
+        regHi = int(reg_tok_hi[1:])
+        regLo = int(reg_tok_lo[1:])
+        if regHi < 0 or regHi > 3 or regLo < 0 or regLo > 3:
+            raise ValueError(f"Register out of range on line {line_number}")
+        
+        return regHi, regLo
+
+
     def handle_mnemonic(parts: list[str], labels: HashTable) -> None:
         global mem_pos
         mnemonic = parts[0].upper()
@@ -117,6 +140,8 @@ def assemble(file_name: str) -> bytearray:
         elif mnemonic.startswith("."): #directives
             if mnemonic == ".ORG":
                 mem_pos = int(parts[1], 0)
+                if not (0 <= mem_pos <= 0xFFFF):
+                    raise ValueError(f".org value error. Line: {line_number}")
 
             elif mnemonic == ".BYTE":
                 for part in parts:
@@ -283,6 +308,42 @@ def assemble(file_name: str) -> bytearray:
             machine_code[mem_pos] = (hi)
             increment_mem_pos()
 
+        elif mnemonic == "MOV":
+            if len(parts) < 3:
+                raise ValueError(f"Bad MOV syntax: {raw_line!r} on line {line_number}")
+
+            reg = parse_reg(parts, 1)
+            r1 = parse_reg(parts, 2)
+
+            machine_code[mem_pos] = (0xB0 + reg)
+            increment_mem_pos()
+            machine_code[mem_pos] = (r1)
+            increment_mem_pos()
+
+        elif mnemonic == "LDX":
+            if len(parts) < 3:
+                raise ValueError(f"Bad LDX syntax: {raw_line!r} on line {line_number}")
+
+            reg = parse_reg(parts, 1)
+            regHi, regLo = parse_reg_reg(parts, 2)
+
+            machine_code[mem_pos] = (0xC0 + reg)
+            increment_mem_pos()
+            machine_code[mem_pos] = ((regHi << 4) + regLo)
+            increment_mem_pos()
+
+        elif mnemonic == "STX":
+            if len(parts) < 3:
+                raise ValueError(f"Bad STX syntax: {raw_line!r} on line {line_number}")
+
+            reg = parse_reg(parts, 1)
+            regHi, regLo = parse_reg_reg(parts, 2)
+
+            machine_code[mem_pos] = (0xD0 + reg)
+            increment_mem_pos()
+            machine_code[mem_pos] = ((regHi << 4) + regLo)
+            increment_mem_pos()
+
         elif mnemonic == "HLT":
             machine_code[mem_pos] = (0xFF)
             increment_mem_pos()
@@ -305,7 +366,7 @@ def assemble(file_name: str) -> bytearray:
         mnemonic = mnemonic.upper()
         if mnemonic in ("NOP", "HLT"):
             return 1
-        if mnemonic in ("LDI", "ADD", "SUB", "AND", "OR", "XOR"):
+        if mnemonic in ("LDI", "ADD", "SUB", "AND", "OR", "XOR", "MOV", "LDX", "STX"):
             return 2
         if mnemonic in ("LD", "ST", "JMP", "JZ", "JNZ"):
             return 3

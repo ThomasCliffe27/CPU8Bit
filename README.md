@@ -79,7 +79,7 @@ XOR r, imm       - bitwise XOR immediate with register   - 2 bytes  [opcode][imm
 JMP addr         - jump to address                       - 3 bytes  [opcode][addr]
 JZ  addr         - jump if Z = 1                         - 3 bytes  [opcode][addr]
 JNZ addr         - jump if Z = 0                         - 3 bytes  [opcode][addr]
-MOV r, r2        - store value at r2 in r1               - 2 bytes  [opcode][reg]
+MOV r, r2        - copy r2 into r                        - 2 bytes  [opcode][reg]
 LDX r, [R1:R2]   - load from memory into register        - 2 bytes  [opcode][reg,reg]
 STX r, [R1:R2]   - store register into memory            - 2 bytes  [opcode][reg,reg]
 HLT              - halt program                          - 1 byte
@@ -117,7 +117,7 @@ For `opcode r, [R1:R2]`, register `r` is the **low nibble** of the opcode, regis
 Example:
 
 ```text
-0xC0 0x12  ->  R0 = value at memory address stored at (R2 << 8) + R1
+0xC0 0x12  ->  R0 = value at memory address stored at (R1 << 8) + R2
 ```
 
 ### Error behaviour
@@ -146,7 +146,7 @@ Any opcode not defined, or any register id not in `0–3`, will:
 0xA1 - JZ  addr
 0xA2 - JNZ addr
 0xB_ - MOV r, r2
-0xC_ - STX r, [R1:R2]
-0xD_ - LDX r, [R1:R2]
+0xC_ - LDX r, [R1:R2]
+0xD_ - STX r, [R1:R2]
 0xFF - HLT
 ```
